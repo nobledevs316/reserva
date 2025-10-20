@@ -3,37 +3,37 @@ const form = document.getElementById("formReserva");
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // Calcular inicio y fin en formato ISO
-  const inicio = new Date(`${form.fecha.value}T${form.hora.value}`).toISOString();
-  const finDate = new Date(`${form.fecha.value}T${form.hora.value}`);
-  finDate.setHours(finDate.getHours() + 1); // Evento de 1 hora
-  const fin = finDate.toISOString();
+  // Construir fechas con zona horaria -03:00
+  const inicio = `${form.fecha.value}T${form.hora.value}:00-03:00`;
+  const [hora, minuto] = form.hora.value.split(":");
+  const finHora = String(Number(hora) + 1).padStart(2, "0");
+  const fin = `${form.fecha.value}T${finHora}:${minuto}:00-03:00`;
 
-  // Preparar datos a enviar al webhook
   const data = {
     nombre: form.nombre.value,
     email: form.email.value,
     whatsapp: form.whatsapp.value,
     servicio: form.servicio.value,
-    inicio: inicio,
-    fin: fin
+    inicio,
+    fin
   };
 
   try {
-    const response = await fetch("https://nobledevs.app.n8n.cloud/webhook-test/reserva", {
+    const response = await fetch("https://nobledevs.app.n8n.cloud/webhook/reserva", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     });
 
+    const mensaje = document.getElementById("respuesta");
     if (response.ok) {
-      document.getElementById("respuesta").innerText = "✅ Reserva enviada con éxito!";
+      mensaje.innerHTML = '<div class="alert alert-success mt-3">✅ Reserva enviada con éxito. ¡Gracias por elegir Lavadero Pro!</div>';
       form.reset();
     } else {
-      document.getElementById("respuesta").innerText = "❌ Error al enviar la reserva. Intenta nuevamente.";
+      mensaje.innerHTML = '<div class="alert alert-danger mt-3">❌ Error al enviar la reserva. Intenta nuevamente.</div>';
     }
   } catch (error) {
     console.error(error);
-    document.getElementById("respuesta").innerText = "❌ Error al enviar la reserva. Intenta nuevamente.";
+    document.getElementById("respuesta").innerHTML = '<div class="alert alert-danger mt-3">❌ Error de conexión. Verifica tu conexión e intenta otra vez.</div>';
   }
 });
